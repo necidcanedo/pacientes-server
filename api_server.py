@@ -1,7 +1,9 @@
-from flask import Flask
+from flask import Flask, send_file
 from flask import request
 import json 
 from sqlalchemy import create_engine
+import numpy as np
+import io
 
 import pacientes_info
 
@@ -17,6 +19,7 @@ sqlEngine = create_engine('mysql+pymysql://{}:{}@{}/{}'.format(db_user, db_passw
 @app.route("/pacientes", methods=['POST'])
 def registrar_paciente():
     paciente = request.get_json()
+    print("paciente:", paciente)
     db = sqlEngine.connect()
     id_paciente = pacientes_info.registrar_paciente(paciente, db)
     db.close()
@@ -29,6 +32,20 @@ def leer_paciente():
     paciente = pacientes_info.consultar_paciente(cedula, db)
     db.close()
     return json.dumps(paciente)
+
+@app.route("/analisis/<id_paciente>", methods=["POST"])
+def analizar_senal(id_paciente):
+    buffer = request.get_data()
+    senal = np.frombuffer(buffer, dtype=np.float)
+    
+    # Procesamiento
+    from scipy.signal import medfilt
+    senal_out = medfilt(senal, 101)
+    
+    return send_file(
+                     io.BytesIO(senal_out.tobytes()),
+                     mimetype='application/octet-stream'
+               )
 
 if __name__ == "__main__":
     app.run()

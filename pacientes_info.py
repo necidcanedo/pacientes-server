@@ -12,7 +12,7 @@ def registrar_paciente(paciente, db):
     df=pd.DataFrame(paciente,index=[1])
     df.to_sql('pacientes_info', db, if_exists='append', index=False);
     data = pd.read_sql('SELECT MAX(id) FROM pacientes_info', db)
-    return data['MAX(id)'][0]
+    return int(data['MAX(id)'][0])
     
 def consultar_paciente(cedula, db):
     data = pd.read_sql('SELECT id, nombre, apellido, cedula, celular FROM pacientes_info WHERE cedula="{}"'.format(cedula), db)
